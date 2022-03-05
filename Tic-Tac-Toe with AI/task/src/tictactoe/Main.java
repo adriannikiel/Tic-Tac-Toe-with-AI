@@ -1,5 +1,7 @@
 package tictactoe;
 
+import java.util.Arrays;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
@@ -23,13 +25,13 @@ public class Main {
         int result = 0;
         while (result == 0) {
 
-            boolean inputOK = false;
-            int[] coords = new int[2];
+            int[] coords;
 
-            do {
-                System.out.print("Enter the coordinates: ");
-                inputOK = analyzeInput(state, coords);
-            } while (!inputOK);
+            if (isNextRoundForX) {
+                coords = playerMove(state);
+            } else {
+                coords = computerMove(state);
+            }
 
             int x = coords[0];
             int y = coords[1];
@@ -48,6 +50,31 @@ public class Main {
         }
     }
 
+    private static int[] playerMove(String[] state) {
+        boolean inputOK;
+        int[] coords = new int[2];
+
+        do {
+            System.out.print("Enter the coordinates: ");
+            inputOK = analyzePlayerInput(state, coords);
+        } while (!inputOK);
+
+        return new int[]{coords[0], coords[1]};
+    }
+
+    private static int[] computerMove(String[] state) {
+        boolean inputOK;
+        int[] coords = new int[2];
+
+        System.out.println("Making move level \"easy\"");
+
+        do {
+            inputOK = analyzeComputerInput(state, coords);
+        } while (!inputOK);
+
+        return new int[]{coords[0], coords[1]};
+    }
+
     private static boolean checkXnext(String[] state) {
         int x = countLetterInGrid(state, "X");
         int y = countLetterInGrid(state, "O");
@@ -59,15 +86,15 @@ public class Main {
 
         String[] state = new String[9];
 
-        System.out.print("Enter the cells: ");
-        state  = scanner.nextLine().split("");
+        //System.out.print("Enter the cells: ");
+        //state  = scanner.nextLine().split("");
 
-        //Arrays.fill(state," ");
+        Arrays.fill(state, " ");
 
         return state;
     }
 
-    public static boolean analyzeInput(String[] state, int[] coords) {
+    public static boolean analyzePlayerInput(String[] state, int[] coords) {
         final String OCCUPIED = "This cell is occupied! Choose another one!";
         final String IS_NOT_NUMBER = "You should enter numbers!";
         final String WRONG_COORDINATES = "Coordinates should be from 1 to 3!";
@@ -109,6 +136,16 @@ public class Main {
         return true;
     }
 
+    public static boolean analyzeComputerInput(String[] state, int[] coords) {
+
+        Random random = new Random();
+
+        coords[0] = 1 + random.nextInt(3);
+        coords[1] = 1 + random.nextInt(3);
+
+        return !isOccupied(state, coords[0], coords[1]);
+    }
+
     public static int analyzeState(String[] state) {
 
         if (checkImpossible(state)) {
@@ -131,9 +168,9 @@ public class Main {
             return 3;
         }
 
-        System.out.println("Game not finished");
-        return 5;
-        //return 0;
+        //System.out.println("Game not finished");
+        //return 5;
+        return 0;
     }
 
     private static boolean isOccupied(String[] state, int x, int y) {
