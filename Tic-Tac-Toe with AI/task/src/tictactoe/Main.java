@@ -11,11 +11,67 @@ public class Main {
     public static void main(String[] args) {
 
         String[] state = prepareInitState();
-        playGame(state);
+
+        boolean isExit = false;
+        while (!isExit) {
+
+            Commands[] commands = getCommands();
+
+            if (commands[0] == Commands.EXIT) {
+                isExit = true;
+            } else if (commands[0] == Commands.START) {
+                playGame(state, commands[1], commands[2]);
+            }
+        }
 
     }
 
-    private static void playGame(String[] state) {
+    private static Commands[] getCommands() {
+
+        while (true) {
+            System.out.print("Input command: ");
+            String[] line = scanner.nextLine().split(" ");
+
+            if (line[0].toUpperCase().equals("EXIT")) {
+                return new Commands[]{Commands.EXIT};
+            } else if (line[0].toUpperCase().equals("START")) {
+                if (line.length == 3) {
+                    Commands player1;
+                    Commands player2;
+
+                    if (line[1].toUpperCase().equals("USER") && line[2].toUpperCase().equals("USER")) {
+                        player1 = Commands.USER;
+                        player2 = Commands.USER;
+                        return new Commands[]{Commands.START, player1, player2};
+                    }
+
+                    if (line[1].toUpperCase().equals("USER") && line[2].toUpperCase().equals("EASY")) {
+                        player1 = Commands.USER;
+                        player2 = Commands.EASY;
+                        return new Commands[]{Commands.START, player1, player2};
+                    }
+
+                    if (line[1].toUpperCase().equals("EASY") && line[2].toUpperCase().equals("USER")) {
+                        player1 = Commands.EASY;
+                        player2 = Commands.USER;
+                        return new Commands[]{Commands.START, player1, player2};
+                    }
+
+                    if (line[1].toUpperCase().equals("EASY") && line[2].toUpperCase().equals("EASY")) {
+                        player1 = Commands.EASY;
+                        player2 = Commands.EASY;
+                        return new Commands[]{Commands.START, player1, player2};
+                    }
+
+                }
+            }
+
+            System.out.println("Bad parameters!");
+        }
+
+    }
+
+    private static void playGame(String[] state, Commands player1, Commands player2) {
 
         String[][] grid = makeGridFromState(state);
         printGrid(grid);
@@ -25,12 +81,26 @@ public class Main {
         int result = 0;
         while (result == 0) {
 
-            int[] coords;
+            int[] coords = new int[2];
 
             if (isNextRoundForX) {
-                coords = playerMove(state);
+                switch (player1) {
+                    case USER:
+                        coords = userMove(state);
+                        break;
+                    case EASY:
+                        coords = computerMove(state);
+                        break;
+                }
             } else {
-                coords = computerMove(state);
+                switch (player2) {
+                    case USER:
+                        coords = userMove(state);
+                        break;
+                    case EASY:
+                        coords = computerMove(state);
+                        break;
+                }
             }
 
             int x = coords[0];
@@ -50,13 +120,13 @@ public class Main {
         }
     }
 
-    private static int[] playerMove(String[] state) {
+    private static int[] userMove(String[] state) {
         boolean inputOK;
         int[] coords = new int[2];
 
         do {
             System.out.print("Enter the coordinates: ");
-            inputOK = analyzePlayerInput(state, coords);
+            inputOK = analyzeUserInput(state, coords);
         } while (!inputOK);
 
         return new int[]{coords[0], coords[1]};
@@ -94,7 +164,7 @@ public class Main {
         return state;
     }
 
-    public static boolean analyzePlayerInput(String[] state, int[] coords) {
+    public static boolean analyzeUserInput(String[] state, int[] coords) {
         final String OCCUPIED = "This cell is occupied! Choose another one!";
         final String IS_NOT_NUMBER = "You should enter numbers!";
         final String WRONG_COORDINATES = "Coordinates should be from 1 to 3!";

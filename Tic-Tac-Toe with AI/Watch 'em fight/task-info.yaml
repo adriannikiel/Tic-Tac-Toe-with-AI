@@ -248,6 +248,12 @@ files:
         }
     }
   learner_created: false
+- name: src/tictactoe/Commands.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/learn/step/7436#comment
-status: Unchecked
-record: -1
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Sun, 06 Mar 2022 08:09:04 UTC
+record: 3

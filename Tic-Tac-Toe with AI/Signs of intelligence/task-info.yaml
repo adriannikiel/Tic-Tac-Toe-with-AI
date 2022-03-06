@@ -331,6 +331,25 @@ files:
         }
     }
   learner_created: false
+- name: src/tictactoe/Commands.java
+  visible: true
+  text: |
+    package tictactoe;
+
+    public enum Commands {
+        START("start"), EXIT("exit"), EASY("easy"), USER("user");
+
+        final String name;
+
+        Commands(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+  learner_created: true
 feedback_link: https://hyperskill.org/learn/step/7437#comment
 status: Unchecked
 record: -1
