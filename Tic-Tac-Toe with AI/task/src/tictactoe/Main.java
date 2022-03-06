@@ -15,63 +15,61 @@ public class Main {
         boolean isExit = false;
         while (!isExit) {
 
-            Commands[] commands = getCommands();
+            Player[] players = new Player[2];
+            Command command = getCommand(players);
 
-            if (commands[0] == Commands.EXIT) {
-                isExit = true;
-            } else if (commands[0] == Commands.START) {
-                playGame(state, commands[1], commands[2]);
+            switch (command) {
+                case START:
+                    playGame(state, players[0], players[1]);
+                    break;
+                case EXIT:
+                    isExit = true;
+                    break;
+                default:
+                    throw new IllegalArgumentException();
             }
         }
-
     }
 
-    private static Commands[] getCommands() {
+    private static Command getCommand(Player[] players) {
 
         while (true) {
             System.out.print("Input command: ");
             String[] line = scanner.nextLine().split(" ");
 
             if (line[0].toUpperCase().equals("EXIT")) {
-                return new Commands[]{Commands.EXIT};
+                return Command.EXIT;
             } else if (line[0].toUpperCase().equals("START")) {
                 if (line.length == 3) {
-                    Commands player1;
-                    Commands player2;
 
-                    if (line[1].toUpperCase().equals("USER") && line[2].toUpperCase().equals("USER")) {
-                        player1 = Commands.USER;
-                        player2 = Commands.USER;
-                        return new Commands[]{Commands.START, player1, player2};
+                    int counter = 0;
+                    for (Player value : Player.values()) {
+                        if (line[1].toUpperCase().equals(value.name())) {
+                            players[0] = value;
+                            counter++;
+                            break;
+                        }
                     }
 
-                    if (line[1].toUpperCase().equals("USER") && line[2].toUpperCase().equals("EASY")) {
-                        player1 = Commands.USER;
-                        player2 = Commands.EASY;
-                        return new Commands[]{Commands.START, player1, player2};
+                    for (Player value : Player.values()) {
+                        if (line[2].toUpperCase().equals(value.name())) {
+                            players[1] = value;
+                            counter++;
+                            break;
+                        }
                     }
 
-                    if (line[1].toUpperCase().equals("EASY") && line[2].toUpperCase().equals("USER")) {
-                        player1 = Commands.EASY;
-                        player2 = Commands.USER;
-                        return new Commands[]{Commands.START, player1, player2};
-                    }
-
-                    if (line[1].toUpperCase().equals("EASY") && line[2].toUpperCase().equals("EASY")) {
-                        player1 = Commands.EASY;
-                        player2 = Commands.EASY;
-                        return new Commands[]{Commands.START, player1, player2};
+                    if (counter == 2) {
+                        return Command.START;
                     }
 
                 }
+                System.out.println("Bad parameters!");
             }
-
-            System.out.println("Bad parameters!");
         }
-
     }
 
-    private static void playGame(String[] state, Commands player1, Commands player2) {
+    private static void playGame(String[] state, Player player1, Player player2) {
 
         String[][] grid = makeGridFromState(state);
         printGrid(grid);
@@ -84,33 +82,12 @@ public class Main {
             int[] coords = new int[2];
 
             if (isNextRoundForX) {
-                switch (player1) {
-                    case USER:
-                        coords = userMove(state);
-                        break;
-                    case EASY:
-                        coords = computerMove(state);
-                        break;
-                }
-            } else {
-                switch (player2) {
-                    case USER:
-                        coords = userMove(state);
-                        break;
-                    case EASY:
-                        coords = computerMove(state);
-                        break;
-                }
-            }
-
-            int x = coords[0];
-            int y = coords[1];
-
-            if (isNextRoundForX) {
-                grid[x - 1][y - 1] = "X";
+                coords = playerMove(state, player1);
+                grid[coords[0] - 1][coords[1] - 1] = "X";
                 isNextRoundForX = false;
             } else {
-                grid[x - 1][y - 1] = "O";
+                coords = playerMove(state, player2);
+                grid[coords[0] - 1][coords[1] - 1] = "O";
                 isNextRoundForX = true;
             }
 
@@ -118,6 +95,20 @@ public class Main {
             state = makeStateFromGrid(grid);
             result = analyzeState(state);
         }
+    }
+
+    private static int[] playerMove(String[] state, Player player) {
+
+        switch (player) {
+            case USER:
+                return userMove(state);
+            case EASY:
+                return computerMove(state, Player.EASY);
+            case MEDIUM:
+                return computerMove(state, Player.MEDIUM);
+
+        }
+        return new int[0];
     }
 
     private static int[] userMove(String[] state) {
@@ -132,14 +123,24 @@ public class Main {
         return new int[]{coords[0], coords[1]};
     }
 
-    private static int[] computerMove(String[] state) {
-        boolean inputOK;
+    private static int[] computerMove(String[] state, Player player) {
+        boolean inputOK = false;
         int[] coords = new int[2];
 
-        System.out.println("Making move level \"easy\"");
+        if (player == Player.EASY) {
+            System.out.println("Making move level \"easy\"");
+        } else  if (player == Player.MEDIUM) {
+            System.out.println("Making move level \"medium\"");
+        }
 
         do {
-            inputOK = analyzeComputerInput(state, coords);
+            if (player == Player.EASY) {
+                inputOK = analyzeEasyInput(state, coords);
+            } else if (player == Player.MEDIUM) {
+                inputOK = analyzeMediumInput(state, coords);
+            } else {
+                throw new IllegalArgumentException();
+            }
         } while (!inputOK);
 
         return new int[]{coords[0], coords[1]};
@@ -206,12 +207,41 @@ public class Main {
         return true;
     }
 
-    public static boolean analyzeComputerInput(String[] state, int[] coords) {
+    public static boolean analyzeEasyInput(String[] state, int[] coords) {
 
         Random random = new Random();
 
         coords[0] = 1 + random.nextInt(3);
         coords[1] = 1 + random.nextInt(3);
+
+        return !isOccupied(state, coords[0], coords[1]);
+    }
+
+    private static boolean analyzeMediumInput(String[] state, int[] coords) {
+        Random random = new Random();
+
+        boolean isComputerX = checkXnext(state);
+
+        boolean isFound;
+
+        if (isComputerX) {
+            isFound = coordsToMediumWin(state, "X", coords);
+        } else {
+            isFound = coordsToMediumWin(state, "O", coords);
+        }
+
+        if (!isFound) {
+            if (isComputerX) {
+                isFound = coordsToMediumWin(state, "O", coords);
+            } else {
+                isFound = coordsToMediumWin(state, "X", coords);
+            }
+        }
+
+        if (!isFound) {
+            coords[0] = 1 + random.nextInt(3);
+            coords[1] = 1 + random.nextInt(3);
+        }
 
         return !isOccupied(state, coords[0], coords[1]);
     }
@@ -310,6 +340,101 @@ public class Main {
 
         return false;
 
+    }
+
+    private static boolean coordsToMediumWin(String[] state, String letter, int[] coords) {
+        String[][] grid = makeGridFromState(state);
+        int countOccupied = 0;
+        int countEmpty = 0;
+        int xCoord = 0;
+        int yCoord = 0;
+
+        // check rows
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid.length; j++) {
+                if (grid[i][j].equals(letter)) {
+                    countOccupied++;
+                }
+
+                if (grid[i][j].equals(" ") || grid[i][j].equals("_")) {
+                    countEmpty++;
+                    xCoord = i + 1;
+                    yCoord = j + 1;
+                }
+            }
+
+            if (countOccupied == 2 && countEmpty == 1) {
+                coords[0] = xCoord;
+                coords[1] = yCoord;
+                return true;
+            }
+
+            countOccupied = 0;
+            countEmpty = 0;
+        }
+
+        // check columns
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid.length; j++) {
+                if (grid[j][i].equals(letter)) {
+                    countOccupied++;
+                }
+
+                if (grid[j][i].equals(" ") || grid[j][i].equals("_")) {
+                    countEmpty++;
+                    xCoord = j + 1;
+                    yCoord = i + 1;
+                }
+            }
+
+            if (countOccupied == 2 && countEmpty == 1) {
+                coords[0] = xCoord;
+                coords[1] = yCoord;
+                return true;
+            }
+
+            countOccupied = 0;
+            countEmpty = 0;
+        }
+
+        // check diagonals
+        if ((grid[0][0].equals(" ") || grid[0][0].equals("_")) && grid[1][1].equals(letter) && grid[2][2].equals(letter)) {
+            coords[0] = 1;
+            coords[1] = 1;
+            return true;
+        }
+
+        if (grid[0][0].equals(letter) && (grid[1][1].equals(" ") || grid[1][1].equals("_")) && grid[2][2].equals(letter)) {
+            coords[0] = 2;
+            coords[1] = 2;
+            return true;
+        }
+
+        if (grid[0][0].equals(letter) && grid[1][1].equals(letter) && (grid[2][2].equals(" ") || grid[2][2].equals("_"))) {
+            coords[0] = 3;
+            coords[1] = 3;
+            return true;
+        }
+
+        if ((grid[0][2].equals(" ") || grid[0][2].equals("_")) && grid[1][1].equals(letter) && grid[2][0].equals(letter)) {
+            coords[0] = 1;
+            coords[1] = 3;
+            return true;
+        }
+
+        if (grid[0][2].equals(letter) && (grid[1][1].equals(" ") || grid[1][1].equals("_")) && grid[2][0].equals(letter)) {
+            coords[0] = 2;
+            coords[1] = 2;
+            return true;
+        }
+
+        if (grid[0][2].equals(letter) && grid[1][1].equals(letter) && (grid[2][0].equals(" ") || grid[2][0].equals("_"))) {
+            coords[0] = 3;
+            coords[1] = 1;
+            return true;
+        }
+
+        return false;
     }
 
     private static int countLetterInGrid(String[] state, String letter) {
