@@ -375,6 +375,24 @@ files:
         }
     }
   learner_created: false
+- name: src/tictactoe/Player.java
+  visible: true
+  text: |
+    package tictactoe;
+
+    public enum Player {
+        USER, EASY, MEDIUM
+    }
+  learner_created: true
+- name: src/tictactoe/Command.java
+  visible: true
+  text: |
+    package tictactoe;
+
+    public enum Command {
+        START, EXIT
+    }
+  learner_created: true
 feedback_link: https://hyperskill.org/learn/step/7438#comment
 status: Unchecked
 record: -1
