@@ -106,6 +106,8 @@ public class Main {
                 return computerMove(state, Player.EASY);
             case MEDIUM:
                 return computerMove(state, Player.MEDIUM);
+            case HARD:
+                return computerMove(state, Player.HARD);
 
         }
         return new int[0];
@@ -129,8 +131,10 @@ public class Main {
 
         if (player == Player.EASY) {
             System.out.println("Making move level \"easy\"");
-        } else  if (player == Player.MEDIUM) {
+        } else if (player == Player.MEDIUM) {
             System.out.println("Making move level \"medium\"");
+        } else if (player == Player.HARD) {
+            System.out.println("Making move level \"hard\"");
         }
 
         do {
@@ -138,6 +142,8 @@ public class Main {
                 inputOK = analyzeEasyInput(state, coords);
             } else if (player == Player.MEDIUM) {
                 inputOK = analyzeMediumInput(state, coords);
+            } else if (player == Player.HARD) {
+                inputOK = analyzeHardInput(state, coords);
             } else {
                 throw new IllegalArgumentException();
             }
@@ -242,6 +248,16 @@ public class Main {
             coords[0] = 1 + random.nextInt(3);
             coords[1] = 1 + random.nextInt(3);
         }
+
+        return !isOccupied(state, coords[0], coords[1]);
+    }
+
+    private static boolean analyzeHardInput(String[] state, int[] coords) {
+
+        Random random = new Random();
+
+        coords[0] = 1 + random.nextInt(3);
+        coords[1] = 1 + random.nextInt(3);
 
         return !isOccupied(state, coords[0], coords[1]);
     }

@@ -1,5 +1,5 @@
 package tictactoe;
 
 public enum Player {
-    USER, EASY, MEDIUM
+    USER, EASY, MEDIUM, HARD
 }
