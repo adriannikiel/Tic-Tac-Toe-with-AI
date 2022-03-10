@@ -1,6 +1,7 @@
 package tictactoe;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -166,7 +167,11 @@ public class Main {
         //System.out.print("Enter the cells: ");
         //state  = scanner.nextLine().split("");
 
-        Arrays.fill(state, " ");
+        //Arrays.fill(state, " ");
+
+        for (int i = 0; i < 9; i++) {
+            state[i] = String.valueOf(i);
+        }
 
         return state;
     }
@@ -254,12 +259,105 @@ public class Main {
 
     private static boolean analyzeHardInput(String[] state, int[] coords) {
 
-        Random random = new Random();
+        String aiPlayer = checkXnext(state) ? "X" : "O";
+        String huPlayer = aiPlayer.equals("X") ? "O" : "X";
 
-        coords[0] = 1 + random.nextInt(3);
-        coords[1] = 1 + random.nextInt(3);
+        Move baseSpot = minimax(state, aiPlayer, aiPlayer, huPlayer);
+
+        getCoordsFromIndex(baseSpot.index, coords);
 
         return !isOccupied(state, coords[0], coords[1]);
+    }
+
+    private static void getCoordsFromIndex(String indexAsString, int[] coords) {
+
+        int index = Integer.parseInt(indexAsString);
+
+        int n = 0;
+        for (int i = 1; i <= 3; i++) {
+            for (int j = 1; j <= 3; j++) {
+                if (index == n) {
+                    coords[0] = i;
+                    coords[1] = j;
+                    return;
+                }
+                n++;
+            }
+        }
+
+    }
+
+    private static Move minimax(String[] newBoard, String player, String aiPlayer, String huPlayer) {
+
+        Move minimaxResult = new Move();
+
+        Integer[] availSpots = emptyIndexes(newBoard);
+
+        if (isWinner(newBoard, huPlayer)) {
+            minimaxResult.score = -10;
+            return minimaxResult;
+        } else if (isWinner(newBoard, aiPlayer)) {
+            minimaxResult.score = 10;
+            return minimaxResult;
+        } else if (availSpots.length == 0) {
+            minimaxResult.score = 0;
+            return minimaxResult;
+        }
+
+        List<Move> moves = new ArrayList<>();
+
+        for (int i = 0; i < availSpots.length; i++) {
+            Move move = new Move();
+            move.index = newBoard[availSpots[i]];  //move.index
+
+            newBoard[availSpots[i]] = player;
+
+            if (player.equals(aiPlayer)) {
+                Move result = minimax(newBoard, huPlayer, aiPlayer, huPlayer);
+                move.score = result.score;
+            } else {
+                Move result = minimax(newBoard, aiPlayer, aiPlayer, huPlayer);
+                move.score = result.score;
+            }
+
+            newBoard[availSpots[i]] = move.index;
+
+            moves.add(move);
+        }
+
+        int bestMove = 0;
+
+        if (player.equals(aiPlayer)) {
+            int bestScore = -10000;
+            for (int i = 0; i < moves.size(); i++) {
+                if (moves.get(i).score > bestScore) {
+                    bestScore = moves.get(i).score;
+                    bestMove = i;
+                }
+            }
+        } else {
+            int bestScore = 10000;
+            for (int i = 0; i < moves.size(); i++) {
+                if (moves.get(i).score < bestScore) {
+                    bestScore = moves.get(i).score;
+                    bestMove = i;
+                }
+            }
+        }
+
+        return moves.get(bestMove);
+    }
+
+    private static Integer[] emptyIndexes(String[] board) {
+        ArrayList<Integer> list = new ArrayList<>();
+
+        for (int i = 0; i < board.length; i++) {
+            if (!board[i].equals("X") && !board[i].equals("O")) {
+                list.add(Integer.valueOf(board[i]));
+            }
+        }
+
+        return list.toArray(new Integer[0]);
     }
 
     public static int analyzeState(String[] state) {
@@ -294,7 +392,8 @@ public class Main {
         String[][] grid = makeGridFromState(state);
         String actual = grid[x - 1][y - 1];
 
-        return !actual.equals(" ") && !actual.equals("_");
+        // return !actual.equals(" ") && !actual.equals("_");
+        return actual.equals("X") || actual.equals("O");
     }
 
     private static boolean checkImpossible(String[] state) {
@@ -372,7 +471,8 @@ public class Main {
                     countOccupied++;
                 }
 
-                if (grid[i][j].equals(" ") || grid[i][j].equals("_")) {
+                // if (grid[i][j].equals(" ") || grid[i][j].equals("_")) {
+                if (!grid[i][j].equals("X") && !grid[i][j].equals("O")) {
                     countEmpty++;
                     xCoord = i + 1;
                     yCoord = j + 1;
@@ -396,7 +496,7 @@ public class Main {
                     countOccupied++;
                 }
 
-                if (grid[j][i].equals(" ") || grid[j][i].equals("_")) {
+                if (!grid[j][i].equals("X") && !grid[j][i].equals("O")) {
                     countEmpty++;
                     xCoord = j + 1;
                     yCoord = i + 1;
@@ -414,37 +514,37 @@ public class Main {
         }
 
         // check diagonals
-        if ((grid[0][0].equals(" ") || grid[0][0].equals("_")) && grid[1][1].equals(letter) && grid[2][2].equals(letter)) {
+        if ((!grid[0][0].equals("X") && !grid[0][0].equals("O")) && grid[1][1].equals(letter) && grid[2][2].equals(letter)) {
             coords[0] = 1;
             coords[1] = 1;
             return true;
         }
 
-        if (grid[0][0].equals(letter) && (grid[1][1].equals(" ") || grid[1][1].equals("_")) && grid[2][2].equals(letter)) {
+        if (grid[0][0].equals(letter) && (!grid[1][1].equals("X") && !grid[1][1].equals("O")) && grid[2][2].equals(letter)) {
             coords[0] = 2;
             coords[1] = 2;
             return true;
         }
 
-        if (grid[0][0].equals(letter) && grid[1][1].equals(letter) && (grid[2][2].equals(" ") || grid[2][2].equals("_"))) {
+        if (grid[0][0].equals(letter) && grid[1][1].equals(letter) && (!grid[2][2].equals("X") && !grid[2][2].equals("O"))) {
             coords[0] = 3;
             coords[1] = 3;
             return true;
         }
 
-        if ((grid[0][2].equals(" ") || grid[0][2].equals("_")) && grid[1][1].equals(letter) && grid[2][0].equals(letter)) {
+        if ((!grid[0][2].equals("X") && !grid[0][2].equals("O")) && grid[1][1].equals(letter) && grid[2][0].equals(letter)) {
             coords[0] = 1;
             coords[1] = 3;
             return true;
         }
 
-        if (grid[0][2].equals(letter) && (grid[1][1].equals(" ") || grid[1][1].equals("_")) && grid[2][0].equals(letter)) {
+        if (grid[0][2].equals(letter) && (!grid[1][1].equals("X") && !grid[1][1].equals("O")) && grid[2][0].equals(letter)) {
             coords[0] = 2;
             coords[1] = 2;
             return true;
         }
 
-        if (grid[0][2].equals(letter) && grid[1][1].equals(letter) && (grid[2][0].equals(" ") || grid[2][0].equals("_"))) {
+        if (grid[0][2].equals(letter) && grid[1][1].equals(letter) && (!grid[2][0].equals("X") && !grid[2][0].equals("O"))) {
             coords[0] = 3;
             coords[1] = 1;
             return true;
@@ -492,7 +592,8 @@ public class Main {
             System.out.print("| ");
 
             for (int j = 0; j < grid.length; j++) {
-                System.out.print(grid[i][j] + " ");
+                String letterToPrint = (grid[i][j].equals("X") || grid[i][j].equals("O")) ? grid[i][j] : " ";
+                System.out.print(letterToPrint + " ");
             }
 
             System.out.println("|");
@@ -500,4 +601,11 @@ public class Main {
 
         System.out.println("---------");
     }
+
+    static class Move {
+        String index;
+        int score;
+    }
+
+    ;
 }
